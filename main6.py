@@ -21,7 +21,7 @@ class FileSystem:
         num_blocks = int(input("Введите количество блоков для файла: "))
         block_size = int(input("Введите размер блока (в байтах): "))
 
-        # Убедимся, что размер блока соответствует допустимым значениям
+
         if block_size not in BLOCK_SIZES:
             raise Exception("Недопустимый размер блока. Выберите размер из допустимых значений.")
 
@@ -49,7 +49,7 @@ class FileSystem:
                 raise Exception("Недостаточно свободных блоков для записи.")
             file["blocks"].extend(new_blocks)
 
-        # Запрашиваем номер блока для записи
+
         block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для записи данных: "))
         if block_index < 0 or block_index >= len(file["blocks"]):
             raise Exception("Недопустимый номер блока.")
@@ -62,12 +62,12 @@ class FileSystem:
     def read_file(self, name):
         file = self.open_file(name)
 
-        # Запрашиваем номер блока для чтения
+
         block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для чтения данных: "))
         if block_index < 0 or block_index >= len(file["blocks"]):
             raise Exception("Недопустимый номер блока.")
 
-        # Читаем данные из выбранного блока
+
         buffer = bytearray(file["block_size"])
         self.block_space.read_data([file["blocks"][block_index]], buffer)
         print(f"Данные из блока {block_index} файла {name}: {buffer.decode('utf-8', errors='ignore')}")

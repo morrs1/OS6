@@ -1,5 +1,3 @@
-import os
-import struct
 
 MIN_BLOCK_SIZE = 2 ** 10
 MAX_BLOCK_SIZE = 2 ** 16
@@ -147,11 +145,11 @@ class BlockSpace:
 
                 current_chain = self.free_blocks_head
                 while current_chain:
-                    if current_chain.start_block == block_index + 1:  # Проверяем, можно ли объединить с предыдущей цепочкой
+                    if current_chain.start_block == block_index + 1:
                         current_chain.start_block -= 1
                         current_chain.block_count += 1
                         break
-                    elif current_chain.start_block + current_chain.block_count == block_index:  # Проверяем, можно ли объединить с следующей цепочкой
+                    elif current_chain.start_block + current_chain.block_count == block_index:
                         current_chain.block_count += 1
                         break
                     elif current_chain.start_block > block_index:
