@@ -4,11 +4,12 @@ from main import BlockSpace
 BLOCK_SIZES = [2 ** i for i in range(10, 17)]
 
 class FileSystem:
-    def __init__(self, block_space):
+    def __init__(self, block_space, block_size):
         self.block_space = block_space
         self.files = {}
         self.directories = {"/": []}
         self.current_dir = "/"
+        self.block_size = block_size  # Сохраняем размер блока
 
     def get_full_path(self, name):
         return os.path.join(self.current_dir, name)
@@ -19,19 +20,14 @@ class FileSystem:
             raise Exception("Файл с таким именем уже существует или имя занято каталогом.")
 
         num_blocks = int(input("Введите количество блоков для файла: "))
-        block_size = int(input("Введите размер блока (в байтах): "))
-
-
-        if block_size not in BLOCK_SIZES:
-            raise Exception("Недопустимый размер блока. Выберите размер из допустимых значений.")
 
         blocks = self.block_space.allocate_blocks(num_blocks)
         if not blocks:
             raise Exception("Недостаточно свободных блоков.")
 
-        self.files[full_path] = {"size": 0, "blocks": blocks, "position": 0, "block_size": block_size}
+        self.files[full_path] = {"size": 0, "blocks": blocks, "position": 0, "block_size": self.block_size}
         self.directories[self.current_dir].append(name)
-        print(f"Файл {name} создан с {num_blocks} блоками по {block_size} байт.")
+        print(f"Файл {name} создан с {num_blocks} блоками по {self.block_size} байт.")
 
     def open_file(self, name):
         full_path = self.get_full_path(name)
@@ -49,7 +45,6 @@ class FileSystem:
                 raise Exception("Недостаточно свободных блоков для записи.")
             file["blocks"].extend(new_blocks)
 
-
         block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для записи данных: "))
         if block_index < 0 or block_index >= len(file["blocks"]):
             raise Exception("Недопустимый номер блока.")
@@ -62,11 +57,9 @@ class FileSystem:
     def read_file(self, name):
         file = self.open_file(name)
 
-
         block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для чтения данных: "))
         if block_index < 0 or block_index >= len(file["blocks"]):
             raise Exception("Недопустимый номер блока.")
-
 
         buffer = bytearray(file["block_size"])
         self.block_space.read_data([file["blocks"][block_index]], buffer)
@@ -147,8 +140,14 @@ def main():
     with open("block_space.bin", 'wb') as f:
         f.write(b'')
 
-    block_space = BlockSpace("block_space.bin", 1024, 100)
-    fs = FileSystem(block_space)
+    total_blocks = int(input("Введите общее количество блоков для файлов: "))
+    block_size = int(input("Введите размер блока (в байтах): "))
+
+    if block_size not in BLOCK_SIZES:
+        raise Exception("Недопустимый размер блока. Выберите размер из допустимых значений.")
+
+    block_space = BlockSpace("block_space.bin", block_size, total_blocks)
+    fs = FileSystem(block_space, block_size)
 
     while True:
         print(f"\nТекущий каталог: {fs.current_dir}")
