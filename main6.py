@@ -92,7 +92,14 @@ class FileSystem:
         print(f"Текущий каталог изменён на {self.current_dir}.")
 
     def list_directory(self):
-        return self.directories[self.current_dir]
+        items = []
+        for name in self.directories[self.current_dir]:
+            full_path = self.get_full_path(name)
+            if full_path in self.files:
+                items.append(f"{name} (файл)")
+            else:
+                items.append(f"{name} (каталог)")
+        return items
 
     def import_file(self, src_path, dest_name):
         if not os.path.exists(src_path):
@@ -104,7 +111,6 @@ class FileSystem:
         print(f"Файл {src_path} импортирован как {dest_name}.")
 
 def main():
-
     with open("block_space.bin", 'wb') as f:
         f.write(b'')
 
@@ -112,7 +118,8 @@ def main():
     fs = FileSystem(block_space)
 
     while True:
-        print("\nВыберите действие:")
+        print(f"\nТекущий каталог: {fs.current_dir}")
+        print("Выберите действие:")
         print("1 - Создать файл")
         print("2 - Записать данные в файл")
         print("3 - Считать данные из файла")
@@ -175,10 +182,6 @@ def main():
 
         except Exception as e:
             print("Ошибка:", str(e))
-
-if __name__ == "__main__":
-    main()
-
 
 if __name__ == "__main__":
     main()
