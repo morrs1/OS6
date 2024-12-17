@@ -131,6 +131,10 @@ class FileSystem:
         self.write_file(dest_name, data)
         print(f"Файл {src_path} импортирован как {dest_name}.")
 
+    def search_files(self, substring):
+        found_files = [name for name in self.directories[self.current_dir] if substring in name]
+        return found_files
+
 def main():
     with open("block_space.bin", 'wb') as f:
         f.write(b'')
@@ -150,7 +154,8 @@ def main():
         print("7 - Сменить каталог")
         print("8 - Список содержимого каталога")
         print("9 - Импортировать файл")
-        print("10 - Выход")
+        print("10 - Найти файл")
+        print("11 - Выход")
 
         choice = input("Введите номер действия: ")
 
@@ -193,6 +198,14 @@ def main():
                 fs.import_file(src_path, dest_name)
 
             elif choice == '10':
+                substring = input("Введите подстроку для поиска: ")
+                found_files = fs.search_files(substring)
+                if found_files:
+                    print("Найденные файлы:", found_files)
+                else:
+                    print("Файлы не найдены.")
+
+            elif choice == '11':
                 print("Выход из программы.")
                 break
 
