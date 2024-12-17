@@ -104,7 +104,11 @@ class FileSystem:
         print(f"Файл {src_path} импортирован как {dest_name}.")
 
 def main():
-    block_space = BlockSpace("block_space.bin", 1024, 100)  # Создаём блочное пространство
+
+    with open("block_space.bin", 'wb') as f:
+        f.write(b'')
+
+    block_space = BlockSpace("block_space.bin", 1024, 100)
     fs = FileSystem(block_space)
 
     while True:
@@ -171,6 +175,10 @@ def main():
 
         except Exception as e:
             print("Ошибка:", str(e))
+
+if __name__ == "__main__":
+    main()
+
 
 if __name__ == "__main__":
     main()
