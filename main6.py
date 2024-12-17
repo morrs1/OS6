@@ -131,8 +131,16 @@ class FileSystem:
         self.write_file(dest_name, data)
         print(f"Файл {src_path} импортирован как {dest_name}.")
 
-    def search_files(self, substring):
-        found_files = [name for name in self.directories[self.current_dir] if substring in name]
+    def search_files(self, substring, current_dir="/"):
+        found_files = []
+        # Проверяем текущий каталог
+        for name in self.directories[current_dir]:
+            full_path = os.path.join(current_dir, name)
+            if substring in name:
+                found_files.append((name, current_dir))  # Добавляем имя файла и каталог
+            # Рекурсивно ищем в подкаталогах
+            if full_path in self.directories:
+                found_files.extend(self.search_files(substring, full_path))
         return found_files
 
 def main():
@@ -201,7 +209,9 @@ def main():
                 substring = input("Введите подстроку для поиска: ")
                 found_files = fs.search_files(substring)
                 if found_files:
-                    print("Найденные файлы:", found_files)
+                    print("Найденные файлы:")
+                    for name, directory in found_files:
+                        print(f"{name} в каталоге {directory}")
                 else:
                     print("Файлы не найдены.")
 
