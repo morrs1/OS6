@@ -1,6 +1,8 @@
 import os
 from main import BlockSpace
 
+BLOCK_SIZES = [2 ** i for i in range(10, 17)]
+
 class FileSystem:
     def __init__(self, block_space):
         self.block_space = block_space
@@ -16,13 +18,20 @@ class FileSystem:
         if full_path in self.files or name in self.directories[self.current_dir]:
             raise Exception("Файл с таким именем уже существует или имя занято каталогом.")
 
-        blocks = self.block_space.allocate_blocks(1)  # Зарезервируем 1 блок под метаданные
+        num_blocks = int(input("Введите количество блоков для файла: "))
+        block_size = int(input("Введите размер блока (в байтах): "))
+
+        # Убедимся, что размер блока соответствует допустимым значениям
+        if block_size not in BLOCK_SIZES:
+            raise Exception("Недопустимый размер блока. Выберите размер из допустимых значений.")
+
+        blocks = self.block_space.allocate_blocks(num_blocks)
         if not blocks:
             raise Exception("Недостаточно свободных блоков.")
 
-        self.files[full_path] = {"size": 0, "blocks": blocks, "position": 0}
+        self.files[full_path] = {"size": 0, "blocks": blocks, "position": 0, "block_size": block_size}
         self.directories[self.current_dir].append(name)
-        print(f"Файл {name} создан.")
+        print(f"Файл {name} создан с {num_blocks} блоками по {block_size} байт.")
 
     def open_file(self, name):
         full_path = self.get_full_path(name)
@@ -32,7 +41,7 @@ class FileSystem:
 
     def write_file(self, name, data):
         file = self.open_file(name)
-        blocks_needed = (len(data) + self.block_space.block_size - 1) // self.block_space.block_size
+        blocks_needed = (len(data) + file["block_size"] - 1) // file["block_size"]
 
         while len(file["blocks"]) < blocks_needed:
             new_blocks = self.block_space.allocate_blocks(1)
@@ -40,16 +49,28 @@ class FileSystem:
                 raise Exception("Недостаточно свободных блоков для записи.")
             file["blocks"].extend(new_blocks)
 
-        self.block_space.write_data(data, file["blocks"][:blocks_needed])
+        # Запрашиваем номер блока для записи
+        block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для записи данных: "))
+        if block_index < 0 or block_index >= len(file["blocks"]):
+            raise Exception("Недопустимый номер блока.")
+
+        self.block_space.write_data(data, [file["blocks"][block_index]])
         file["size"] = len(data)
         file["position"] = len(data)
-        print(f"Данные записаны в файл {name}.")
+        print(f"Данные записаны в блок {block_index} файла {name}.")
 
-    def read_file(self, name, length):
+    def read_file(self, name):
         file = self.open_file(name)
-        buffer = bytearray(length)
-        self.block_space.read_data(file["blocks"], buffer)
-        return buffer[:file["size"]]
+
+        # Запрашиваем номер блока для чтения
+        block_index = int(input(f"Введите номер блока (0 до {len(file['blocks']) - 1}) для чтения данных: "))
+        if block_index < 0 or block_index >= len(file["blocks"]):
+            raise Exception("Недопустимый номер блока.")
+
+        # Читаем данные из выбранного блока
+        buffer = bytearray(file["block_size"])
+        self.block_space.read_data([file["blocks"][block_index]], buffer)
+        print(f"Данные из блока {block_index} файла {name}: {buffer.decode('utf-8', errors='ignore')}")
 
     def delete_file(self, name):
         full_path = self.get_full_path(name)
@@ -145,9 +166,7 @@ def main():
 
             elif choice == '3':
                 name = input("Введите имя файла: ")
-                length = int(input("Введите количество байт для чтения: "))
-                data = fs.read_file(name, length)
-                print("Считанные данные:", data.decode('utf-8', errors='ignore'))
+                fs.read_file(name)
 
             elif choice == '4':
                 name = input("Введите имя файла: ")
@@ -185,3 +204,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
